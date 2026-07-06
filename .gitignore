@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/*.duckdb
+out/
+node_modules/
+dist/
+.pytest_cache/
+data/sessions.db
+*.pptx
+*.pdf
