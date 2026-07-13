@@ -15,7 +15,9 @@ from __future__ import annotations
 from typing import Any, Callable
 
 import jsonschema
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import AsyncRetrying, retry, stop_after_attempt, wait_exponential
+
+_RETRY = dict(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=0.3, max=4), reraise=True)
 
 
 class GuardrailError(Exception):
@@ -31,10 +33,21 @@ def validate_json(payload: dict, schema: dict) -> dict:
     return payload
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=0.3, max=4), reraise=True)
+@retry(**_RETRY)
 def call_with_retry(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
-    """Run a tool call with exponential backoff on failure."""
+    """Run a *sync* callable with exponential backoff on failure."""
     return fn(*args, **kwargs)
+
+
+async def acall_with_retry(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+    """Run an *async* callable with exponential backoff.
+
+    Retries the awaited execution (not just coroutine creation), so transient
+    tool/transport failures are actually retried.
+    """
+    async for attempt in AsyncRetrying(**_RETRY):
+        with attempt:
+            return await fn(*args, **kwargs)
 
 
 def verify_tool_result(result: Any) -> Any:

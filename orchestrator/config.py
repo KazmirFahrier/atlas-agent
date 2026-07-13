@@ -19,6 +19,8 @@ class Config:
     max_tokens: int = int(os.environ.get("ATLAS_MAX_TOKENS", "2048"))
     token_budget: int = int(os.environ.get("ATLAS_TOKEN_BUDGET", "8000"))
     db_path: str = os.environ.get("ATLAS_DB_PATH", "data/warehouse.duckdb")
+    sessions_path: str = os.environ.get("ATLAS_SESSIONS_DB", "data/sessions.db")
+    persist_memory: bool = os.environ.get("ATLAS_PERSIST_MEMORY", "1") != "0"
 
     @property
     def has_llm(self) -> bool:

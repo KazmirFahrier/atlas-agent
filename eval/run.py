@@ -10,7 +10,7 @@ from __future__ import annotations
 import sys
 import uuid
 
-from orchestrator.agent import answer
+from orchestrator.agent import answer_traced
 from orchestrator.config import CONFIG
 from orchestrator.guardrails import GuardrailError, assert_read_only_sql
 
@@ -27,9 +27,9 @@ def _run_case(case: dict, offline: bool) -> tuple[bool, str]:
             return True, "guardrail correctly blocked write"
 
     session_id = str(uuid.uuid4())
-    last = ""
+    last, tools = "", []
     for turn in case["turns"]:
-        last = answer(turn, session_id)
+        last, tools = answer_traced(turn, session_id)
 
     if offline or not CONFIG.has_llm:
         missing = [s for s in case.get("offline_contains", []) if s not in last]
@@ -37,11 +37,12 @@ def _run_case(case: dict, offline: bool) -> tuple[bool, str]:
             return False, f"offline output missing: {missing}"
         return True, "offline assertions passed"
 
-    # Online: check the expected tool family appears in the transcript.
+    # Online: assert the expected tool was ACTUALLY invoked (from the trace),
+    # not merely mentioned in the answer text.
     tool = case.get("expects_tool")
-    if tool and tool not in last.lower():
-        return False, f"expected tool '{tool}' not evident in output"
-    return True, "online assertions passed"
+    if tool and tool not in tools:
+        return False, f"expected tool '{tool}' not invoked; trace={tools}"
+    return True, f"online assertions passed (tools={tools})"
 
 
 def main() -> None:

@@ -14,5 +14,5 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: python data/seed.py
       - run: ruff check .
-      - run: pytest -q                        # unit tests (guardrails, memory, sandbox)
-      - run: python -m eval.run --offline     # regression suite runs without API keys
+      - run: pytest -q                        # unit tests (guardrails, memory, sandbox, agent)
+      - run: ATLAS_PERSIST_MEMORY=0 python -m eval.run --offline  # regression suite, no API keys

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from dataclasses import dataclass, field
 
 
@@ -76,7 +77,9 @@ class SqliteMemoryStore:
 
     def __init__(self, path: str = "data/sessions.db") -> None:
         self._path = path
-        self._conn = sqlite3.connect(path)
+        # check_same_thread=False + a lock: safe under ThreadingHTTPServer.
+        self._conn = sqlite3.connect(path, check_same_thread=False)
+        self._lock = threading.Lock()
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS turns (
@@ -92,22 +95,24 @@ class SqliteMemoryStore:
         self._conn.commit()
 
     def _append(self, session_id: str, turn: Turn) -> None:
-        cur = self._conn.execute(
-            "SELECT COALESCE(MAX(idx), -1) + 1 FROM turns WHERE session_id = ?",
-            (session_id,),
-        )
-        idx = cur.fetchone()[0]
-        self._conn.execute(
-            "INSERT INTO turns VALUES (?, ?, ?, ?, ?)",
-            (session_id, idx, turn.role, turn.content, int(turn.pinned)),
-        )
-        self._conn.commit()
+        with self._lock:
+            cur = self._conn.execute(
+                "SELECT COALESCE(MAX(idx), -1) + 1 FROM turns WHERE session_id = ?",
+                (session_id,),
+            )
+            idx = cur.fetchone()[0]
+            self._conn.execute(
+                "INSERT INTO turns VALUES (?, ?, ?, ?, ?)",
+                (session_id, idx, turn.role, turn.content, int(turn.pinned)),
+            )
+            self._conn.commit()
 
     def get(self, session_id: str) -> Session:
-        rows = self._conn.execute(
-            "SELECT role, content, pinned FROM turns WHERE session_id = ? ORDER BY idx",
-            (session_id,),
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT role, content, pinned FROM turns WHERE session_id = ? ORDER BY idx",
+                (session_id,),
+            ).fetchall()
         turns = [Turn(r[0], r[1], bool(r[2])) for r in rows]
         return Session(session_id, turns=turns, _store=self)
 
