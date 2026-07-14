@@ -4,15 +4,33 @@ on:
   pull_request:
 
 jobs:
-  test:
+  python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
       - run: python data/seed.py
       - run: ruff check .
-      - run: pytest -q                        # unit tests (guardrails, memory, sandbox, agent)
-      - run: ATLAS_PERSIST_MEMORY=0 python -m eval.run --offline  # regression suite, no API keys
+      - run: pytest -q
+      - run: ATLAS_PERSIST_MEMORY=0 python -m eval.run --offline
+      - run: ATLAS_PERSIST_MEMORY=0 python scripts/demo.py
+      - run: test -s out/brief.pdf && test -s out/deck.pptx
+
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - run: npm install --ignore-scripts
+        working-directory: ui
+      - run: npm run build
+        working-directory: ui
+      - run: npm install --ignore-scripts
+        working-directory: mcp_servers_ts
+      - run: npm run build
+        working-directory: mcp_servers_ts

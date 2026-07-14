@@ -2,7 +2,7 @@
 
 Isolation applied on POSIX via `resource` rlimits in a preexec hook:
   * RLIMIT_CPU  — CPU-seconds ceiling (hard stop on busy loops)
-  * RLIMIT_AS   — address-space (memory) ceiling
+  * RLIMIT_AS   — address-space (memory) ceiling on Linux
   * RLIMIT_FSIZE— max bytes the child may write (0 = no file writes)
 Plus: runs in a throwaway temp cwd, wall-clock timeout, and stdout cap.
 
@@ -29,7 +29,10 @@ def _limits() -> None:  # pragma: no cover - runs only in the child process
     import resource
 
     resource.setrlimit(resource.RLIMIT_CPU, (CPU_SECONDS, CPU_SECONDS))
-    resource.setrlimit(resource.RLIMIT_AS, (MEM_BYTES, MEM_BYTES))
+    # RLIMIT_AS is reliable on Linux, but setting it below the parent process's
+    # existing virtual-memory footprint can make macOS fail in preexec_fn.
+    if sys.platform.startswith("linux"):
+        resource.setrlimit(resource.RLIMIT_AS, (MEM_BYTES, MEM_BYTES))
     resource.setrlimit(resource.RLIMIT_FSIZE, (FSIZE_BYTES, FSIZE_BYTES))
 
 

@@ -11,6 +11,7 @@ server and (optionally) a remote HTTP transport.
 from __future__ import annotations
 
 import os
+import sys
 from contextlib import AsyncExitStack
 from typing import Any
 
@@ -25,9 +26,9 @@ except Exception:  # allow import without the dependency installed (offline eval
 
 
 SERVERS: dict[str, list[str]] = {
-    "sql": ["python", "-m", "mcp_servers.sql_exec.server"],
-    "py": ["python", "-m", "mcp_servers.py_sandbox.server"],
-    "docgen": ["python", "-m", "mcp_servers.docgen.server"],
+    "sql": [sys.executable, "-m", "mcp_servers.sql_exec.server"],
+    "py": [sys.executable, "-m", "mcp_servers.py_sandbox.server"],
+    "docgen": [sys.executable, "-m", "mcp_servers.docgen.server"],
     # TypeScript server (build first: cd mcp_servers_ts && npm i && npm run build)
     "greeter": ["node", "mcp_servers_ts/dist/server.js"],
 }

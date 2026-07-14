@@ -10,17 +10,17 @@
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
 
 const server = new McpServer({ name: "greeter", version: "0.1.0" });
 
-server.tool(
+server.registerTool(
   "now",
-  "Return the current server time in ISO-8601 (UTC). Proves the TS MCP server is live.",
-  { tz: z.string().optional().describe("IANA timezone, defaults to UTC") },
-  async ({ tz }) => {
+  {
+    description: "Return the current server time in ISO-8601 (UTC). Proves the TS MCP server is live.",
+  },
+  async () => {
     const iso = new Date().toISOString();
-    return { content: [{ type: "text", text: JSON.stringify({ now: iso, tz: tz ?? "UTC" }) }] };
+    return { content: [{ type: "text", text: JSON.stringify({ now: iso, tz: "UTC" }) }] };
   }
 );
 
