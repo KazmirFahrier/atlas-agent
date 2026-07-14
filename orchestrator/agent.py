@@ -112,7 +112,7 @@ async def _run_llm(question: str, session_id: str) -> tuple[str, list[str]]:
 
     messages = session.assemble(CONFIG.token_budget)
     try:
-        for _ in range(6):  # bounded tool-use loop
+        for _ in range(CONFIG.max_steps):  # bounded tool-use loop (ATLAS_MAX_STEPS)
             resp = client.messages.create(
                 model=CONFIG.model,
                 max_tokens=CONFIG.max_tokens,
