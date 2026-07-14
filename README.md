@@ -8,6 +8,8 @@ Atlas is a multi-turn workspace agent built around the actual **Model Context Pr
 
 > **Status:** complete, CI-verified local reference implementation. Atlas is containerized and deployable to GCP Cloud Run, but it is **not currently hosted**.
 
+> **Companion project:** A deeper take on LLM-over-SQL correctness, governed semantic metrics, and numerical grounding lives in [`campaign-copilot`](https://github.com/KazmirFahrier/campaign-copilot). Atlas focuses on the complementary MCP tool-platform layer: protocol interoperability, sandboxed execution, orchestration, memory, and artifact generation.
+
 ## Why MCP is the point
 
 Atlas does not hide tools behind an in-process function registry. The orchestrator opens MCP sessions over stdio, discovers schemas from each server, validates model arguments, and returns tool results through the protocol. The same client talks to Python servers and a TypeScript MCP server.
