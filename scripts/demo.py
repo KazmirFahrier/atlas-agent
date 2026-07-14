@@ -8,14 +8,19 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sys
 from pathlib import Path
 
-from orchestrator.mcp_client import McpClient
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from orchestrator.mcp_client import McpClient  # noqa: E402
 
 
 QUERY = """
 WITH bounds AS (
-    SELECT MAX(day) AS period_end, MAX(day) - INTERVAL 89 DAY AS period_start
+    SELECT MAX(day) AS period_end, MAX(day) - INTERVAL 90 DAY AS period_start
     FROM campaign_daily
 )
 SELECT
